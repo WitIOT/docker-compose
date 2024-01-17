@@ -1,60 +1,32 @@
-version: "3.7"
+version: '3'
+
 services:
-
   node-red:
-    container_name: nodered
-    image: nodered/node-red:latest
-    environment:
-      - TZ=Asia/Bangkok
+    image: nodered/node-red
     ports:
-      - 1880:1880
-    networks:
-      - service-net
+      - "1880:1880"
     volumes:
-      - service-data1
-
-  db:
-    container_name: mysql
-    image: mysql
-    # NOTE: use of "mysql_native_password" is not recommended: https://dev.mysql.com/doc/refman/8.0/en/upgrading-from-previous-series.html#upgrade-caching-sha2-password
-    # (this is just an example, not intended to be a production configuration)
-    command: --default-authentication-plugin=mysql_native_password
+      - ./node-red:/data
     restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: ckadmin
-    networks:
-      - service-net
-    volumes:
-      - service-data1
-
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - 8080:8080
-    networks:
-      - service-net
-    volumes:
-      - service-data1
 
   influxdb:
-    container_name: influxdb
     image: influxdb:1.8
-    volumes:
-      - /mnt/influxdb/data:/var/lib/influxdb1-8:rw
-#    env_file:
-#      - .env
-#    entrypoint: ["./entrypoint.sh"]
     ports:
-      - 8086:8086
-    restart: unless-stopped
-    networks:
-      - service-net
-    Volumes: serice-data
+      - "8086:8086"
+    environment:
+      INFLUXDB_DB: mydb
+      INFLUXDB_ADMIN_USER: admin
+      INFLUXDB_ADMIN_PASSWORD: password
+      INFLUXDB_USER: user
+      INFLUXDB_USER_PASSWORD: userpassword
+    volumes:
+      - ./influxdb:/var/lib/influxdb
+    restart: always
 
-volumes:
-  service-data:
-  service-data1:
-
-networks:
-  service-net:
+  chronograf:
+    image: chronograf:latest
+    ports:
+      - "8888:8888"
+    environment:
+      CHRONOGRAF_DB: http://influxdb:8086
+    restart: always
